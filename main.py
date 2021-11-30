@@ -1,11 +1,12 @@
 import re
+import json
 
 
 class Validator:
     """
     Класс Validator используется для валидации данных
 
-    Объекты:
+    Attributes:
     __telephone: номер телефона
     __weight: рост
     __snils: номер СНИЛС
@@ -176,22 +177,54 @@ class Validator:
         Результат проверки
         """
         if not self.check_telephone():
-            return 0;
+            return 0
         elif not self.check_weight():
-            return 1;
+            return 1
         elif not self.check_snils():
-            return 2;
+            return 2
         elif not self.check_passport_number():
-            return 3;
+            return 3
         elif not self.check_occupation():
-            return 4;
+            return 4
         elif not self.check_age():
-            return 5;
+            return 5
         elif not self.check_political_views():
-            return 6;
+            return 6
         elif not self.check_worldview():
-            return 7;
+            return 7
         elif not self.check_address():
-            return 8;
+            return 8
         else:
-            return 9;
+            return 9
+
+class ReadFile:
+    """
+    Класс ReadFile считывает и хранит данные из выбранного файла.
+    Attributes:
+
+      __data - считанные данные из файла
+    """
+
+    __data: object
+
+    # инициализация экземпляра класса ReadFromFile, параметры - объекты класса
+    def __init__(self, path: str):
+        """
+        __init__ - инициализация экземпляра класса ReadFromFile
+        Parameters
+
+        path : str  -  Путь до выбранного файла
+        """
+        self.__data = json.load(open(path, encoding='windows-1251'))
+
+    @property
+    def data(self) -> object:
+        """
+        data - метод получения данных файла
+
+        :return: object
+        Возвращает тип object
+        """
+        return self.__data
+
+    
