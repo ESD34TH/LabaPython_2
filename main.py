@@ -1,5 +1,8 @@
+import argparse
 import re
 import json
+
+from tqdm import tqdm
 
 
 class Validator:
@@ -31,7 +34,7 @@ class Validator:
     __worldview_invalid = []
 
     # инициализация экземпляра класса Validator, параметры - объекты класса
-    def __init__(self, telephone: str, weight: int, snils: str, passport_number: str, occupation: str, age: int,
+    def __init__(self, telephone: str, weight: int, snils: str, passport_number: str, age: int, occupation: str,
                  political_views: str, worldview: str, address: str):
         self.__telephone = telephone
         self.__weight = weight
@@ -67,10 +70,10 @@ class Validator:
         :return: bool
         Результат проверки в булевом типе данных
         """
-        if (int(self.__weight) < 40) and (int(self.__weight) > 120):
+        if re.match(r"^\d{2}$", str(self.__age)) is not None and (int(self.__weight) > 40) and (int(self.__weight) < 120):
             return True
         return False
-
+    print("check1")
     def check_snils(self) -> bool:
         """
         Проверка номера СНИЛС
@@ -80,7 +83,7 @@ class Validator:
         :return: bool
         Результат проверки в булевом типе данных
         """
-        if re.match(r"^\d{11}$", self.__snils):
+        if re.match(r"^\d{11}$", self.__snils) is not None:
             return True
         return False
 
@@ -93,7 +96,7 @@ class Validator:
         :return: bool
         Результат проверки в булевом типе данных
         """
-        if re.match(r"^\d{6}$", self.__passport_number):
+        if re.match(r"^\d{6}$", str(self.__passport_number)) is not None:
             return True
         return False
 
@@ -107,7 +110,7 @@ class Validator:
         :return: bool
         Результат проверки в булевом типе данных
         """
-        if re.match(r"^([A-Z]|[А-Я])[\D]+$", self.__occupation) is not None and self.__occupation not in\
+        if re.match(r"^([A-Z]|[А-Я])[\D]+$", str(self.__occupation)) is not None and self.__occupation not in \
                 self.__occupation_invalid:
             return True
         return False
@@ -121,7 +124,7 @@ class Validator:
         :return: bool
         Результат проверки в булевом типе данных
         """
-        if (int(self.__age) < 0) and (int(self.__age) > 100):
+        if re.match(r"^\d{2}$", str(self.__age)) is not None and (int(self.__age) < 0) and (int(self.__age) > 100):
             return True
         return False
 
@@ -135,7 +138,7 @@ class Validator:
         :return: bool
         Результат проверки в булевом типе данных
         """
-        if re.match(r"^[\D]+$", self.__political_views) is not None and self.__political_views not in\
+        if re.match(r"^[\D]+$", self.__political_views) is not None and self.__political_views not in \
                 self.__political_views_invalid:
             return True
         return False
@@ -197,6 +200,7 @@ class Validator:
         else:
             return 9
 
+
 class ReadFile:
     """
     Класс ReadFile считывает и хранит данные из выбранного файла.
@@ -227,4 +231,43 @@ class ReadFile:
         """
         return self.__data
 
-    
+
+parser = argparse.ArgumentParser(description='main')
+parser.add_argument('-input', dest="file_input", default='90.txt', type=str)
+parser.add_argument('-output', dest="file_output", default='90_output.txt', type=str)
+args = parser.parse_args()
+output = open(args.file_output, 'w')
+file = ReadFile(args.file_input)
+checkers = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+number_of_valid_records = 0
+with tqdm(file.data, desc='Валидация файла', colour="#FFFFFF") as progressbar:
+    for elem in file.data:
+        check_element = Validator(elem['telephone'], elem['weight'], elem['snils'], elem['passport_number'],
+                                  elem['occupation'], elem['age'], elem['political_views'], elem['worldview'],
+                                  elem['address'])
+        valid_values = check_element.check_all()
+        if valid_values == 9:
+            output.write("telephone: " + elem["telephone"] + "\n" + "weight:" + str(elem["weight"]) + "\n" +
+                         "snils: " + elem["snils"] + "\n" + "passport_number:" + str(
+                elem["passport_number"]) + "\n" +
+                         "occupation: " + str(elem["occupation"]) + "\n" + "age: " + elem["age"] + "\n" +
+                         "political_views: " + elem["political_views"] + "\n" + "worldview: " + elem["worldview"] +
+                         "\n" + "address: " + elem["address"] + "\n" + "__________________________________________\n")
+            number_of_valid_records += 1
+        else:
+            checkers[valid_values] += 1
+        progressbar.update(1)
+number_of_invalid_records = checkers[0] + checkers[1] + checkers[2] + checkers[3] + checkers[4] + checkers[5] + \
+                            checkers[6] + checkers[7] + checkers[8]
+print("Общее число корректных записей:", number_of_valid_records, )
+print("Общее число некорректных записей:", number_of_invalid_records)
+print("Ошибки в telephone:", checkers[0])
+print("Ошибки в weight:", checkers[1])
+print("Ошибки в snils:", checkers[2])
+print("Ошибки в passport_number:", checkers[3])
+print("Ошибки в occupation:", checkers[4])
+print("Ошибки в age:", checkers[5])
+print("Ошибки в address:", checkers[6])
+print("Ошибки в political_views:", checkers[7])
+print("Ошибки в worldview:", checkers[8])
+output.close()
